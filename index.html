@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+<title>LEF DE GRUP Pesmi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: two panes on wide screens (setlist rail | chord sheet), one pane at a time on phones. */
+:root {
+  --bg: #f2f3ef; --panel: #ffffff; --fg: #16181d; --muted: #5b626d; --line: #d8dbd3;
+  --chord: #1c47c9; --accent: #1c47c9; --accent-fg: #ffffff; --soft: #e7eaf6;
+  --ok: #1f7a46; --warn: #9a5b00; --danger: #b42318;
+  --f-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sheet-size: 15px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101217; --panel: #171a21; --fg: #e7e9ee; --muted: #9aa1ad; --line: #2a2f39;
+  --chord: #91b1ff; --accent: #7f9fff; --accent-fg: #0d1020; --soft: #1e2436;
+  --ok: #5fd08f; --warn: #f0b45a; --danger: #ff8a7a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #101217; --panel: #171a21; --fg: #e7e9ee; --muted: #9aa1ad; --line: #2a2f39;
+  --chord: #91b1ff; --accent: #7f9fff; --accent-fg: #0d1020; --soft: #1e2436;
+  --ok: #5fd08f; --warn: #f0b45a; --danger: #ff8a7a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45 }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px }
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 2px solid var(--fg); margin-bottom: 18px }
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 34px; line-height: .9; letter-spacing: .01em; text-transform: uppercase }
+.brand small { display: block; font-family: var(--f-body); font-weight: 500; font-size: 12px; letter-spacing: .14em; color: var(--muted); margin-top: 6px }
+button, .btn { font: inherit; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 8px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; line-height: 1.2 }
+button:hover, .btn:hover { border-color: var(--muted) }
+button:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent) }
+button.danger { color: var(--danger) }
+button.danger.armed { background: var(--danger); color: var(--panel); border-color: var(--danger) }
+button:disabled { opacity: .5; cursor: default }
+.grid { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 22px; align-items: start }
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 40px) }
+.search { width: 100%; font: inherit; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg) }
+.count { font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase }
+.list { list-style: none; margin: 0; padding: 0; overflow-y: auto; border-top: 1px solid var(--line) }
+.list li button { width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 10px 6px; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-weight: 400 }
+.list li button[aria-current="true"] { background: var(--soft) }
+.list .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums }
+.list .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.list .a { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.list .k { font-family: var(--f-mono); font-size: 12px; color: var(--chord); font-weight: 700 }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: var(--line) }
+.dot.full { background: var(--ok) } .dot.chords { background: var(--warn) }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line) }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 6px 10px; color: var(--muted) }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg) }
+.archived { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); border: 1px solid var(--warn); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted) }
+
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px 28px; min-width: 0 }
+.back { display: none }
+.artist { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+h1.title { font-family: var(--f-display); font-weight: 800; font-size: 46px; line-height: .95; margin: 4px 0 12px; text-wrap: balance; text-transform: uppercase }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); margin-bottom: 10px }
+.meta b { color: var(--fg); font-family: var(--f-mono); font-weight: 700 }
+.meta b.key { color: var(--chord) }
+.links { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px }
+.links a { font-size: 13px; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; text-decoration: none }
+.notes { font-size: 14px; color: var(--muted); max-width: 68ch; margin: 0 0 14px; white-space: pre-wrap }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 0; border-block: 1px solid var(--line); margin-bottom: 16px }
+.tools .grp { display: inline-flex; align-items: center; gap: 4px }
+.tools .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-right: 4px }
+.tools .val { font-family: var(--f-mono); min-width: 34px; text-align: center; font-variant-numeric: tabular-nums }
+.tools .sp { flex: 1 }
+.sheet { font-family: var(--f-mono); font-size: var(--sheet-size); line-height: 1.5; white-space: pre; overflow-x: auto; padding-bottom: 6px }
+.sheet .ch { color: var(--chord); font-weight: 700 }
+.sheet .sec { display: inline-block; font-family: var(--f-body); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: .6em; border-bottom: 1px solid var(--line) }
+.empty { color: var(--muted); max-width: 60ch }
+.empty h2 { font-family: var(--f-display); font-size: 28px; color: var(--fg); text-transform: uppercase; margin: 0 0 8px }
+
+.form { display: grid; gap: 14px }
+.form h2 { font-family: var(--f-display); font-size: 32px; text-transform: uppercase; margin: 0 }
+.step { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; background: var(--bg) }
+.step h3 { margin: 0; font-size: 14px; font-weight: 600 }
+.step p { margin: 0; font-size: 13px; color: var(--muted) }
+label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: grid; gap: 4px }
+input[type=text], input[type=url], input[type=number], textarea { font: inherit; font-size: 15px; text-transform: none; letter-spacing: 0; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0 }
+textarea { font-family: var(--f-mono); font-size: 13px; line-height: 1.45; resize: vertical }
+textarea#f-sheet { min-height: 340px; white-space: pre; overflow-x: auto }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.msg { font-size: 13px; color: var(--muted) }
+.msg.err { color: var(--danger) } .msg.ok { color: var(--ok) }
+.banner { border: 1px solid var(--warn); color: var(--warn); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px }
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: minmax(0, 1fr) }
+  .rail { position: static; max-height: none }
+  body.reading .rail { display: none }
+  body:not(.reading) .pane { display: none }
+  .back { display: inline-flex; margin-bottom: 12px }
+  .pane { padding: 16px }
+  h1.title { font-size: 36px }
+  .brand { font-size: 28px }
+}
+@media (prefers-reduced-motion: no-preference) { .list li button { transition: background .12s } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">LEF DE GRUP<small>Pesmarica benda · samo za ogled</small></div>
+    <span class="count">Stanje 16. 10. 2026</span>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+  <div class="grid">
+    <aside class="rail">
+      <input class="search" id="q" type="search" placeholder="Išči po naslovu ali izvajalcu" aria-label="Išči">
+      <div class="tabs" role="tablist" hidden><button type="button" role="tab" id="tab-active" aria-selected="true">Seznam</button><button type="button" role="tab" id="tab-archive" aria-selected="false">Arhiv</button></div>
+      <div class="count" id="count">Nalagam seznam…</div>
+      <div class="legend"><span><i class="dot full"></i>akordi in besedilo</span><span><i class="dot chords"></i>samo akordi</span><span><i class="dot"></i>prazno</span></div>
+      <ul class="list" id="list"></ul>
+    </aside>
+    <main class="pane" id="pane">
+      <div class="empty"><h2>Pesmarica se nalaga</h2><p>Seznam komadov se bere iz skupne pesmarice benda.</p></div>
+    </main>
+  </div>
+</div>
+
+<script>
+const EMBED = [{"id": "black-pumas-colors", "title": "Colors", "artist": "Black Pumas", "key": "F#m", "bpm": 90, "capo": null, "links": [{"label": "Ultimate Guitar (ver 2)", "url": "https://tabs.ultimate-guitar.com/tab/black-pumas/colors-chords-3053308"}, {"label": "Chordify", "url": "https://chordify.net/chords/black-pumas-songs/colors-2-chords"}], "sheet": "[Uvod]\n| F#m |     | A   |     | E   | C#7 | F#m | F#m\n\n[Kitica 1]\n                  F#m\n                 A\n                        E\n        C#7\n       F#m\n\n[Kitica 2]\nF#m                                         A\n\n             E\n               C#7\n   F#m\n\n[Refren]\n                     F#m\n                A\n                  E\n                C#7\n                F#m\n\n[Po refrenu]\n                    F#m\n\n            A\n                  E\n                     C#7\n                F#m\n\n[Kitica 3]\n                   F#m\n              A\n         E                               C#7\n                   F#m\n\n[Kitica 4]\n          F#m\n\n             A\n\n    E\n   C#7\n        F#m\n\n[Refren]\n                     F#m\n                A\n                  E\n                C#7\n                F#m\n\n[Inštrumental]\n| F#m |     | A   |     | E   |  C#7 | F#m | F#m\n\n[Refren]\n                F#m\n\n                A\n                  E\n                C#7\n                F#m\n\n[Po refrenu]\n                   F#m\n\n                              A\n\n                  E\n                     C#7\nN.C.                   F#m", "notes": "Zapis v originalni tonaliteti F#m brez kapodastra (prilepil band, Ultimate Guitar). Tempo okoli 90 BPM, se spreminja. N.C. = brez akorda."}, {"id": "buc-kamikaze", "title": "Kamikaze", "artist": "Buč Kesidi", "key": "", "bpm": 160, "capo": null, "links": [{"label": "UG: vsi komadi izvajalca", "url": "https://www.ultimate-guitar.com/artist/461195"}, {"label": "Chordify: vsi komadi", "url": "https://chordify.net/chords/buc-kesidi-songs"}], "sheet": "[Kitica 1]\n\n[Predrefren]\n\n[Refren]\n\n[Kitica 2]\n\n[Predrefren]\n\n[Refren]", "notes": "Besedilo vneseno, akordi še manjkajo. Tempo 160 BPM, 4/4 (iz tablature melodije, ki jo je prilepil band). Melodija se začne v 13. taktu na strunah G in B. Uporablja tone G#, A#, C#, D#, F#, kar kaže na Ebm ali F# (sklepano iz tablature, ni preverjeno s posnetkom)."}, {"id": "buc-tuzne-ljubavi", "title": "Tužne ljubavi", "artist": "Buč Kesidi", "key": "Gm", "bpm": 120, "capo": null, "links": [{"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/5870051"}, {"label": "Chordify", "url": "https://chordify.net/chords/buc-kesidi-tuzne-ljubavi-buc-kesidi"}], "sheet": "[Uvod]\nEb  Cm  Gm  Dm  (2x)\n\n[Kitica]\nEb | Cm | Gm | Dm  (2x)\n\n[Predrefren]\nEb  Cm  Gm  Dm  (2x)\n\n[Refren]\nEb | Cm | Gm  Dm  (2x)\n\n[Vmesni del]\nEb  Cm  Gm  Dm  (2x)\n\n[Zaključek]\nEb  Cm | Gm  Dm  (3x)\nEb  Cm  Gm  Dm", "notes": "Kitara: kapodaster na 3. pražek, prijemi C Am Em Bm. Viri se ujemajo."}, {"id": "commodores-easy", "title": "Easy", "artist": "Commodores", "key": "G", "bpm": 66, "capo": 1, "links": [{"label": "e-chords", "url": "https://www.e-chords.com/chords/commodores/easy"}, {"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/commodores/easy-chords-1674672"}], "sheet": "[Uvod]\n  G     Bm7    Am7  C/D     G     Bm7    Am7\n\n[Kitica 1]\nG                   Bm7\n                 Am7              C/D\nG           Bm7              Am7     C/D\nG          Bm7                          Am7       C/D\nG            Bm7                 Am7              C/D\n\n[Refren 1]\n                   G        Bm7      Am7\n\n    C/D              G         Bm7      Am7\n\nC/D                  G         Bm7      Am7\n\n    C/D              F   C/E  C/D   G\n\n[Kitica 2]\nG            Bm7                     Am7          C/D\n       G       Bm7                  Am7   D7sus4\nG           Bm7                      Am7          C/D\nG         Bm7                 Am7             C/D\n\n[Refren 2]\n                   G         Bm7      Am7\n\n    C/D              G         Bm7      Am7\n\nC/D                 G        Bm7      Am7\n\n    C/D              F   C/E  C/D  G\n\n[Most]\nGsus4 G              Fmaj7    Em7 Dm7   F/G\n        Em7 Fmaj7                        Em7 Dm7  F/G\n        Em7 Fmaj7    Em7  Dm7 F/G\n\n  Bb/F  F/C      Bb/D   C\n\n[Solo]\n  G     Bm7    Am7  C/D     G     Bm7    Am7   D7sus4\n  G     Bm7    Am7  C/D     G     Bm7    Am7\n\n[Refren 3]\n               G       Bm7      Am7\n\n    C/D              G        Bm7      Am7\n\nC/D                 G         Bm7      Am7\n\n    C/D              G         Bm7        Am7\n\n[Refren 4 (modulacija)]\nAm7 Bbm7             Ab        Cm7      Bbm7\n\n     Db/Eb            Ab          Cm7         Bbm7\n\nDb/Eb             Ab           Cm7      Bbm7\n\nDb/Eb            Ab          Cm7      Bbm7\n\n[Zaključek]\nDb/Eb            Ab      Cm7    Bbm7\n\nDb/Eb            Gb   Db/F  Db/Eb  Ab", "notes": ""}, {"id": "cutting-crew-died-in-your-arms", "title": "(I Just) Died in Your Arms", "artist": "Cutting Crew", "key": "Bm", "bpm": 125, "capo": null, "links": [{"label": "e-chords", "url": "https://www.e-chords.com/chords/cutting-crew/i-justdie-in-yours-arms"}, {"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/cutting-crew/i-just-died-in-your-arms-chords-1024059"}], "sheet": "[Uvod]\nBm  Esus4  Em  A  F#m  (2x)\nBm  Em  A | F#m  Bm | Em  A | Bm\n\n[Kitica]\nBm | Gmaj7 | A  F#sus4  (2x)\n\n[Refren]\nBm  Em  A | F#m  Bm | Em  A  F#m  (2x)\nF#m  Gmaj7  Bm\n\n[Most]\nG | Em | G | F#  Bm\n\n[Solo]\nBm  Em  A  F#m  (2x)\n\n[Zaključek]\nBm  Em  A  F#m  (6x)", "notes": "Vir: UG (4.8/5, 837 glasov). Refren se zadnjič konča na F#m Gmaj7 Bm."}, {"id": "denis-program-tvog-kompjutera", "title": "Program tvog kompjutera", "artist": "Denis & Denis", "key": "Bm", "bpm": 176, "capo": null, "links": [{"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/denis-denis/program-tvog-kompjutera-chords-1898488"}, {"label": "Pesmarica.rs", "url": "https://www.pesmarica.rs/akordi/7587/Denis--Denis--Program-tvog-kompjutera"}, {"label": "Chordify", "url": "https://chordify.net/chords/denis-denis-songs/program-tvog-kompjutera-3-chords"}], "sheet": "[Uvod]\nBm  Bm  Bm  Bm\nBm  G  A  Bm\nBm  G  A  Bm\n\n[Kitica 1]\nBm       Em           A        Bm\nBm   Em         A         Bm\nBm  Em  A  Bm\nBm    Em          A      G\nG  A\nBm    Em         A      Bm\nBm      Em         A           Bm\nBm  Em  A  Bm\nBm    Em          A          G\nG  A\n\n[Refren]\nD        A            Bm\n      A      G     D\nD        A            Bm\n     A      G      D\nD        A            Bm\n    A      G      D\nD        A            Bm\n         A           G\n            A\n\n[Vmesni del]\nBm  G  A  Bm\nBm  G  A  Bm\n\n[Kitica 2]\nBm       Em                A             Bm\nBm     Em          A             Bm\nBm  Em  A  Bm\nBm     Em         A          G\nG  A\n\n[Refren]\nD        A            Bm\n      A      G     D\nD        A            Bm\n     A      G      D\nD        A            Bm\n    A      G      D\nD        A            Bm\n         A           G\n            A\n\n[Vmesni del]\nBm  G  A  Bm\nBm  G  A  Bm\n\nBm  Em  A  Bm\nBm  Em  A  Bm\n\n[Refren]\nD        A            Bm\n      A      G     D\nD        A            Bm\n     A      G      D\nD        A            Bm\n    A      G      D\nD        A            Bm\n         A           G\n             A\n\nD        A            Bm\n      A      G     D\nD        A            Bm\n     A      G      D\nD        A            Bm\n    A      G      D\nD        A            Bm\n         A           G\n             A\n\n[Zaključek]\nD  A  Bm  A  G\nD  A  Bm  A  G\nD  A  Bm  A  G", "notes": "Ta zapis je v Bm (prilepil band), pol tona nižje od originala v Cm. Za originalno višino transponiraj +1. H je pretvorjen v B (Hm = Bm). Tempo originala 176 BPM."}, {"id": "detour-plesem-sama", "title": "Plešem sama", "artist": "Detour", "key": "F#m", "bpm": 136, "capo": null, "links": [{"label": "Ultimate Guitar", "url": "https://es.ultimate-guitar.com/tab/1898532"}, {"label": "Chordify", "url": "https://chordify.net/chords/detour-songs/plesem-sama-chords"}], "sheet": "[Uvod]\nF#m   E   D   E\n\n[Kitica 1]\n(E)                F#m\n                       E\n                        D\n                          E\n\n                         F#m\n                        E\n                    D\n                   C#m7\n\n[Refren]\nF#m                     E\n                 D\n                  E\nF#m                     E\n                  D\n                  C#m7\n\n[Vmesni del]\nF#m   E   D   E\n\n[Kitica 2]\n(E)                F#m\n                    E\n                     D\n                        E\n\n                         F#m\n                      E\n                  D\n                   C#m7\n\n[Refren]\nF#m                     E\n                 D\n                  E\nF#m                     E\n                  D\n                  E     C#\n\n[Inštrumental]\nDmaj7   A   Dmaj7   A\nEm   B7\nDm   G#  C#\n\n[Refren]\nF#m                     E\n                 D\n                  E\nF#m                     E\n                  D\n                  C#m7\n\nF#m                     E\n                 D\n                  E\nF#m                     E\n                  D\n                  C#m7\n\nF#m                     E\n                 D\n                  E", "notes": "Vir: Ultimate Guitar (prilepil band). Drugi refren se konča na E C#, zadnji refren se ponovi 3x."}, {"id": "gusti-polona-vedno-zame", "title": "Vedno zame", "artist": "Gušti in Polona", "key": "Am", "bpm": null, "capo": null, "links": [{"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/5436819"}, {"label": "zabrenkaj.si", "url": "https://www.zabrenkaj.si/vedno-zame"}], "sheet": "[Uvod]\nAm  Am  Am  Am\n\n[Kitica 1]\nAm\nC\nG\nAm\n\nAm\nC\nG\nAm\n\nAm\nC\nG\nAm\n\n[Predrefren]\nF\nC\nE\nE\n\n[Refren]\n   Am\n    Am\n   G\n       Am\n\n   Am\n   Am\n      G\n       Am\n\n[Vmesni del]\nAm  Am  Am  Am\nAm  Am  Am  Am\n\n[Kitica 2]\nAm\nC\nG\nAm\n\nAm\nC\nG\nAm\n\nAm\nC\nG\nAm\n\n[Predrefren]\nF\nC\nE\nE\n\n[Refren]\n   Am\n    Am\n   G\n       Am\n\n   Am\n   Am\n      G\n       Am\n\n[Zaključek]\nAm  Am  G  Am\nAm  Am  G  Am", "notes": "Vir: prilepil band. Kitice in refren so na Am, C, G, predrefren na F, C, E."}, {"id": "koala-tu-je-vse-tako-lepo", "title": "Ker tu je vse tako lepo", "artist": "Koala Voice", "key": "D", "bpm": null, "capo": null, "links": [{"label": "zabrenkaj.si", "url": "https://www.zabrenkaj.si/ker-tu-je-vse-tako-lepo/"}, {"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/koala-voice/ker-tu-je-vse-tako-lepo-chords-2997797"}], "sheet": "[Uvod]\nD  A  D  A  D  A  D  A\n\n[Refren]\nD\nA\nD\nA\n\n[Kitica 1]\nD\nA\nD\nA\nD\nA\nD\nA\n\n[Refren]\nD\nA\nD\nA\n\n[Kitica 2]\nD\nA\nD\nA\nD\nA\nD\nA\n\n[Refren]\nD\nA\nD\nA\nD\nA\nD\nA\nD\nA\nD\n\n[Zaključek]\nD  A  D  A  D  A  D  A  D", "notes": "Ves komad je D A (po UG, 4.7/5). Akordi so razporejeni po vrsticah okvirno: D na liho, A na sodo vrstico. Prej je bila vpisana tonaliteta A, UG pravi D; preveri s posnetkom."}, {"id": "koala-vede-premikanja", "title": "Vede premikanja", "artist": "Koala Voice", "key": "Am", "bpm": 136, "capo": null, "links": [{"label": "Chordify", "url": "https://chordify.net/chords/koala-voice-vede-premikanja-koala-voice"}], "sheet": "[Glavni riff]\nAm  A5  Am  A5\n\n[Kitica]\n\n[Predrefren]\n\n[Refren]\n\n[Predrefren]\n\n[Most]\n\n[Refren]\n\n[Zaključek]", "notes": "Chordify zazna le Am/A5: komad nosi riff, ne akordskega kroga. Riff poberite s posnetka. Besedilo prepisano s posnetka zaslona."}, {"id": "lep-dan-za-smrt", "title": "Lep dan za smrt", "artist": "Niet", "key": "E", "bpm": null, "capo": null, "links": [{"label": "zabrenkaj.si", "url": "https://zabrenkaj.si/lep-dan-za-smrt/"}, {"label": "Ultimate Guitar (tab)", "url": "https://tabs.ultimate-guitar.com/tab/niet/lep-dan-za-smrt-tabs-1075784"}], "sheet": "[Uvod]\nE  (riff)\nE  B  C#m  A\n\n[Kitica]\nC#m  E  B  G#m  (riff)\n\n[Refren]\nE  B  A  B  (4x)\n\n[Solo]\nE  B  A  B\n\n[Kitica (variacija)]\nE  B  C#m  A  G#  F#", "notes": "Standardna uglasitev. Vir: UG (dva zapisa se ujemata). Zapis je tablatura z riffi s power akordi; tab za riffe in solo je na UG. Dan D cover je v C (C G Fmaj7 G)."}, {"id": "panda-ljubimec-brez-imena", "title": "Ljubimec brez imena", "artist": "Panda", "key": "C#m", "bpm": 125, "capo": null, "links": [{"label": "Chordify", "url": "https://chordify.net/chords/panda-ljubimec-brez-imena-videospot-miha-plantaric"}], "sheet": "[Glavni krog]\nC#m  A  B  E\n\n[Varianta]\nC#m  A  Bm  E", "notes": "Akordi delni (Chordify, samodejno). Prehodi: F#m, G#m, G#7."}, {"id": "soft-cell-tainted-love", "title": "Tainted Love", "artist": "Soft Cell", "key": "Em", "bpm": 145, "capo": 3, "links": [{"label": "e-chords", "url": "https://www.e-chords.com/chords/soft-cell/tainted-love"}, {"label": "Ultimate Guitar (ver 2)", "url": "https://tabs.ultimate-guitar.com/tab/soft-cell/tainted-love-chords-528038"}], "sheet": "[Uvod]\n   Em  G   C   G\n\n[Kitica 1]\n     Em     G C          Asus2\nEm G     C         Asus2\nEm G     C\n         Asus2    Em    G         C        Asus2\n\n    Em   G  C     Asus2\nEm  G     C\nAsus2    Em   G  C\nAsus2 Em                     G\n\n[Refren]\nE                  G\nC\n  Am\nAsus2\nEm   G        C     Asus2\nEm  G       C    Asus2\n\n[Kitica 2]\nEm   G C          Asus2\nEm G     C         Asus2\nEm G     C\nAsus2     Em              G\n\n   Em   G      C\n    Asus2     Em     G        C\nAsus2        Em         G     C\nAsus2    Em             G\n\n[Refren]\nE                  G\nC\n  Am\nAsus2\nEm   G        C     Asus2\nEm  G       C    Asus2\n\n[Kitica 3]\n      Em    G   C\n  Asus2       Em        G       C\n  Em                   G       C\nAsus2   Em               G\n\n[Zaključek]\nEm  G        C     Asus2\nEm  G        C     Asus2\nEm  G        C     Asus2\nEm  G        C     Asus2\n\nEm  G               C       Asus2\nEm  G               C       Asus2\n\nEm  G        C     Asus2\nEm  G        C     Asus2", "notes": "Prijemi Em s kapodastrom na 3. pražku, zveni Gm kot original. Vir: Ultimate Guitar (prilepil band). Riff iz uvoda se ponavlja čez ves komad."}, {"id": "tinkara-ko-bo-prisel", "title": "Ko bo prišel", "artist": "Tinkara Kovač", "key": "D", "bpm": null, "capo": null, "links": [{"label": "zabrenkaj.si", "url": "https://www.zabrenkaj.si/ko-bo-prisel/"}], "sheet": "[Uvod]\nBsus4  Bm  Bsus4  G\nAsus4  A  Asus4  A\nBsus4  Bm  Bsus4  G\nAsus4  A  Asus4  A\n\n[Kitica 1]\nBm           G    A\nBm         G    A\nC#m       F#\nC#m         F#\nC#m          F#  G\n\n[Refren]\nD         A               Em\n         G            D\nD         A              Em\n       G                 Bsus4\nBsus4  G\n           Asus4          A       Asus4            A\n\n[Kitica 2]\nBm             G   A\nBm          G   A\nC#m       F#\nC#m         F#\nC#m          F#  G\n\n[Refren]\nD         A               Em\n         G            D\nD         A              Em\n       G                 D\n\nD  A  Em  G\nD  A  Em  G\n\n[Most]\nC#m       F#\nC#m         F#\nC#m          F#  G\n\n[Refren]\nD         A               Em\n         G            D\nD         A              Em\n       G                 D\n\nD         A               Em\n         G            D\nD         A              Em\n       G                 D\n\nD         A    Em\n         G            D\nD         A    Em\n       G                 D\n\n[Zaključek]\nD         A             Em\n    G    D\nD         A             Em\n    G    D", "notes": "Vir: zabrenkaj.si (prilepil band). H je pretvorjen v B (Hm = Bm, Hsus4 = Bsus4). Kitica se začne na Bm, refren v D."}, {"id": "videosex-ti-si-moja-roza", "title": "Ti si moja roža", "artist": "Videosex", "key": "Eb", "bpm": null, "capo": null, "links": [{"label": "zabrenkaj.si", "url": "https://www.zabrenkaj.si/ti-si-moja-roza-video-sex/"}], "sheet": "[Kitica 1]\nEb         Cm\nFm     Bb    Eb\n Eb              Cm\n       Fm         Gm        Eb\n\n[Vmesni del]\nEb  Cm  Ab  Bb\nEb  Cm  Ab  Bb\n\n[Predrefren]\n  Eb\n    Cm            Ab        Bb\n   Eb\n    Cm   Ab       Bb\n  Eb         Cm\n     Ab      Bb\n\n[Refren]\nEb\n      Cm\nEb\n      Cm\nAb\nBb\n\n[Vmesni del]\nEb  Cm  Ab  Bb\nEb  Cm  Ab  Bb\n\n[Kitica 2]\nEb         Cm\nAb            Bb\nEb                 Cm\n   Ab      Bb\n Eb        Cm\n     Ab      Bb\n\n[Refren]\nEb\n      Cm\nEb\n      Cm\nAb\nBb\n\n[Refren]\nEb\n      Cm\nEb\n      Cm\nAb\nBb\n\n[Refren]\nEb\n      Cm\nEb\n      Cm\nAb\nBb", "notes": "Vir: zabrenkaj.si (prilepil band). Akordi pretvorjeni iz nemškega zapisa: Es = Eb, B = Bb, G# = Ab."}, {"id": "zana-majstor-za-poljupce", "title": "Majstor za poljupce", "artist": "Zana", "key": "A", "bpm": 167, "capo": null, "links": [{"label": "Pesmarica.rs", "url": "http://www.pesmarica.rs/Akordi/5862/Zana--Majstor-za-poljupce"}, {"label": "Chordify", "url": "https://chordify.net/chords/zana-majstor-za-poljupce-official-video-plastikfantastik-records"}], "sheet": "[Glavni krog]\nA  D  A  Bm", "notes": "Ostali akordi: F#m, G. Delno (Chordify)."}, {"id": "zana-mladicu-moj", "title": "Mladiću moj", "artist": "Zana", "key": "E", "bpm": 167, "capo": null, "links": [{"label": "Pesmarica.rs", "url": "https://www.pesmarica.rs/akordi/7577/Zana--Mladicu-moj"}, {"label": "Ultimate Guitar", "url": "https://tabs.ultimate-guitar.com/tab/6022319"}, {"label": "Chordify", "url": "https://chordify.net/chords/zana-mladicu-moj-audio-jugoton-music"}], "sheet": "[Kitica]\nE | C#m | E | A  B  (2x)\nB\n\n[Refren]\nE  B  C#m | A  B", "notes": "Vir: pesmarica.rs, UG se ujema (tam ton nižje v D). pesmarica.rs piše H = B. Refren se ponavlja."}];
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : String(k));
+    return n;
+  };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  // ---------- Chords ----------
+  const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const BASE = { C:0, D:2, E:4, F:5, G:7, A:9, B:11, H:11 };
+  const FLAT_KEYS = new Set(["F","Bb","Eb","Ab","Db","Gb","Dm","Gm","Cm","Fm","Bbm","Ebm"]);
+  const SUFFIX = "(?:maj|min|m|M|dim|aug|sus|add|°|ø|\\+|\\d|[#b](?=\\d))*";
+  const CHORD_RE = new RegExp("^(\\(?)([A-H])([#b♯♭]?)(" + SUFFIX + ")(?:\\/([A-H])([#b♯♭]?))?(\\)?)$");
+  const NEUTRAL_RE = /^(\||\|\||–|-|—|\/|%|\.\.\.?|x\d+|\d+x|\(x?\d+x?\)|\(\d+x\)|\(riff\)|N\.?C\.?)$/i;
+  const norm = a => a === "♯" ? "#" : a === "♭" ? "b" : a;
+  const noteIdx = (l, acc) => (BASE[l] + (acc === "#" ? 1 : acc === "b" ? -1 : 0) + 12) % 12;
+  const isChord = t => CHORD_RE.test(t);
+  function isChordLine(line) {
+    const toks = line.trim().split(/\s+/).filter(Boolean);
+    if (!toks.length) return false;
+    let chords = 0;
+    for (const t of toks) { if (isChord(t)) chords++; else if (!NEUTRAL_RE.test(t)) return false; }
+    return chords > 0;
+  }
+  const isSection = line => /^\s*(\[[^\]]+\]|\{c:[^}]*\})\s*$/i.test(line);
+  function transposeChord(tok, steps, flat) {
+    const m = tok.match(CHORD_RE); if (!m) return tok;
+    const [, o, l, a, suf, bl, ba, c] = m;
+    const useFlat = flat == null ? norm(a) === "b" : flat;
+    const names = useFlat ? FLAT : SHARP;
+    let out = o + names[(noteIdx(l, norm(a)) + steps + 120) % 12] + suf;
+    if (bl) out += "/" + names[(noteIdx(bl, norm(ba)) + steps + 120) % 12];
+    return out + c;
+  }
+  // Keeps each chord at its original column so it stays above the right syllable.
+  function transposeLine(line, steps, flat) {
+    let out = "";
+    for (const m of line.matchAll(/\S+/g)) {
+      const t = isChord(m[0]) ? transposeChord(m[0], steps, flat) : m[0];
+      if (out.length < m.index) out += " ".repeat(m.index - out.length);
+      else if (out.length) out += " ";
+      out += t;
+    }
+    return out;
+  }
+  function keyName(key) { const t = (key || "").trim().split(/\s+/)[0] || ""; const m = t.match(CHORD_RE); if (!m) return null; return m[2] === "H" ? "B" + norm(m[3]) + m[4] : m[2] + norm(m[3]) + m[4]; }
+  function flatPref(key, steps) {
+    const k = keyName(key); if (!k) return null;
+    const t = transposeChord(k, steps, false); const minor = /m$/.test(k) && !/maj$/.test(k);
+    const root = t.replace(/m$/, ""); const asFlat = transposeChord(k, steps, true).replace(/m$/, "");
+    return FLAT_KEYS.has(asFlat + (minor ? "m" : "")) || FLAT_KEYS.has(root + (minor ? "m" : "")) ? true : false;
+  }
+  function transposeSheet(text, steps, key) {
+    if (!steps) return text;
+    const flat = flatPref(key, steps);
+    return text.split("\n").map(l => isChordLine(l) && !isSection(l) ? transposeLine(l, steps, flat) : l).join("\n");
+  }
+  const transposeKey = (key, steps) => !steps || !key ? key : key.split(/(\s+|\/)/).map(p => isChord(p.trim()) ? transposeChord(p.trim(), steps, flatPref(key, steps)) : p).join("");
+  function sheetState(text) {
+    let c = false, w = false;
+    for (const l of (text || "").split("\n")) { if (!l.trim() || isSection(l)) continue; if (isChordLine(l)) c = true; else w = true; }
+    return c && w ? "full" : c ? "chords" : w ? "full" : "empty";
+  }
+
+  // ---------- Links ----------
+  const titleCase = s => s.replace(/\b\p{L}/gu, ch => ch.toUpperCase());
+  function guessFromUrl(url) {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+      const host = u.hostname.replace(/^www\./, "");
+      const clean = s => titleCase(s.replace(/-(chords|tabs|tab|ukulele|bass|official|akordi)(-\d+)?$/i, "").replace(/-\d+$/, "").replace(/[-_]+/g, " ").trim());
+      if (/ultimate-guitar/.test(host) && parts[0] === "tab" && parts.length >= 3) return { artist: clean(parts[1]), title: clean(parts[2]), label: "Ultimate Guitar" };
+      if (/e-chords/.test(host) && parts.length >= 3) return { artist: clean(parts[1]), title: clean(parts[2]), label: "e-chords" };
+      if (/pesmarica\.rs/.test(host)) { const last = parts[parts.length - 1] || ""; const [a, t] = last.split("--"); return { artist: clean(a || ""), title: clean(t || ""), label: "Pesmarica.rs" }; }
+      const last = parts[parts.length - 1] || "";
+      return { artist: "", title: clean(last), label: host };
+    } catch { return null; }
+  }
+  const hostLabel = url => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } };
+
+  // ---------- State ----------
+  let db = null, sample = null, songs = [], ready = false;
+  let currentId = store.get("pes.current", null);
+  let mode = "view"; // view | edit | new
+  let steps = 0, size = store.get("pes.size", 15), showArchive = false, view = "both";
+  document.documentElement.style.setProperty("--sheet-size", size + "px");
+
+  const sortSongs = arr => arr.slice().sort((a, b) => (a.artist || "").localeCompare(b.artist || "", "sl") || (a.title || "").localeCompare(b.title || "", "sl"));
+
+  function renderList() {
+    const q = $("#q").value.trim().toLowerCase();
+    const list = $("#list"); list.replaceChildren();
+    const pool = songs.filter(s => !!s.archived === showArchive);
+    const nArch = songs.filter(s => s.archived).length;
+    $("#tab-active").textContent = "Seznam (" + (songs.length - nArch) + ")";
+    $("#tab-archive").textContent = "Arhiv (" + nArch + ")";
+    $("#tab-active").setAttribute("aria-selected", String(!showArchive));
+    $("#tab-archive").setAttribute("aria-selected", String(showArchive));
+    const shown = pool.filter(s => !q || (s.title + " " + s.artist).toLowerCase().includes(q));
+    $("#count").textContent = ready ? `${pool.length} ${showArchive ? "v arhivu" : "komadov"}` + (q ? ` · najdenih ${shown.length}` : "") : "Nalagam seznam…";
+    shown.forEach((s, i) => {
+      const st = sheetState(s.sheet);
+      list.append(el("li", {}, el("button", { type: "button", "aria-current": s.id === currentId && mode !== "new" ? "true" : "false", onclick: () => openSong(s.id) },
+        el("span", { class: "n" }, String(i + 1).padStart(2, "0")),
+        el("span", { style: "min-width:0" }, el("span", { class: "t" }, el("i", { class: "dot " + (st === "empty" ? "" : st) }), s.title || "Brez naslova"), el("span", { class: "a" }, s.artist || "")),
+        el("span", { class: "k" }, keyName(s.key) || "")
+      )));
+    });
+    if (ready && !pool.length) list.append(el("li", { class: "msg", style: "padding:12px 4px" }, showArchive ? "Arhiv je prazen. Komad arhiviraš z gumbom Arhiviraj pri komadu." : "Seznam je prazen. Dodaj prvo pesem z gumbom zgoraj."));
+  }
+
+  function openSong(id) {
+    stopMetro();
+    currentId = id; mode = "view"; steps = 0; store.set("pes.current", id);
+    document.body.classList.add("reading");
+    render(); window.scrollTo({ top: 0 });
+  }
+  function backToList() { document.body.classList.remove("reading"); render(); }
+
+  function render() { renderList(); renderPane(); }
+
+  function renderPane() {
+    const pane = $("#pane"); pane.replaceChildren();
+    const back = el("button", { class: "back", type: "button", onclick: backToList }, "← Seznam");
+    if (mode === "new") { pane.append(back, editor(null)); return; }
+    const s = songs.find(x => x.id === currentId);
+    if (mode === "edit" && s) { pane.append(back, editor(s)); return; }
+    if (!s) {
+      pane.append(el("div", { class: "empty" }, el("h2", {}, ready ? "Izberi komad" : "Pesmarica se nalaga"),
+        el("p", {}, ready ? "Klikni komad na seznamu za akorde in besedilo." : "Seznam komadov se bere iz skupne pesmarice benda.")));
+      return;
+    }
+    const key = transposeKey(s.key, steps);
+    const meta = el("div", { class: "meta" },
+      s.key ? el("span", {}, "Tonaliteta ", el("b", { class: "key" }, key), steps ? ` (original ${s.key})` : "") : null,
+      s.bpm ? el("span", {}, "Tempo ", el("b", {}, String(s.bpm)), " BPM") : null,
+      s.capo ? el("span", {}, "Kapodaster ", el("b", {}, String(s.capo))) : null);
+    const links = el("div", { class: "links" }, (s.links || []).map(l => el("a", { href: l.url, target: "_blank", rel: "noopener" }, (l.label || hostLabel(l.url)) + " ↗")));
+    const del = el("button", { class: "danger", type: "button" }, "Izbriši");
+    let armed = null;
+    del.addEventListener("click", async () => {
+      if (!armed) { del.classList.add("armed"); del.textContent = "Res izbriši?"; armed = setTimeout(() => { armed = null; del.classList.remove("armed"); del.textContent = "Izbriši"; }, 4000); return; }
+      clearTimeout(armed); del.disabled = true;
+      try { await db.doc("songs/" + s.id).delete(); currentId = null; backToList(); } catch (e) { flash(dbErr(e)); del.disabled = false; }
+    });
+    const arch = el("button", { type: "button" }, s.archived ? "Vrni na seznam" : "Arhiviraj");
+    arch.addEventListener("click", async () => {
+      arch.disabled = true;
+      try { await db.doc("songs/" + s.id).update({ archived: !s.archived, updatedAt: Date.now() }); showArchive = !s.archived; flash(s.archived ? "Komad je spet na seznamu." : "Komad je v arhivu.", "ok"); }
+      catch (e) { flash(dbErr(e)); arch.disabled = false; }
+    });
+    const stepVal = el("span", { class: "val" }, (steps > 0 ? "+" : "") + steps);
+    const sizeVal = el("span", { class: "val" }, size);
+    const tools = el("div", { class: "tools" },
+      el("span", { class: "grp" }, el("span", { class: "lbl" }, "Transponiraj"),
+        el("button", { type: "button", "aria-label": "Pol tona nižje", onclick: () => { steps = (steps - 1) % 12; renderPane(); } }, "−"), stepVal,
+        el("button", { type: "button", "aria-label": "Pol tona višje", onclick: () => { steps = (steps + 1) % 12; renderPane(); } }, "+")),
+      el("span", { class: "grp" }, el("span", { class: "lbl" }, "Velikost"),
+        el("button", { type: "button", "aria-label": "Manjša pisava", onclick: () => setSize(size - 1) }, "A−"), sizeVal,
+        el("button", { type: "button", "aria-label": "Večja pisava", onclick: () => setSize(size + 1) }, "A+")),
+      el("span", { class: "grp", role: "group", "aria-label": "Prikaz", hidden: true }, el("span", { class: "lbl" }, "Prikaz"),
+        [["both", "Oboje"], ["chords", "Akordi"], ["lyrics", "Besedilo"]].map(([v, t]) => el("button", { type: "button", class: view === v ? "primary" : null, "aria-pressed": view === v ? "true" : "false", onclick: () => { view = v; store.set("pes.view", v); renderPane(); } }, t))),
+      s.bpm ? metroButton(s.bpm) : null,
+      null,
+      el("span", { class: "sp" }),
+      null);
+    pane.append(back, s.archived ? el("div", { class: "archived" }, "V arhivu") : null, el("div", { class: "artist" }, s.artist || ""), el("h1", { class: "title" }, s.title || "Brez naslova"), meta, links,
+      s.notes ? el("p", { class: "notes" }, s.notes) : null, tools, sheetView(s, key));
+  }
+
+  function sheetView(s, key) {
+    const text = transposeSheet(s.sheet || "", steps, s.key);
+    if (!text.trim()) return el("div", { class: "empty" }, el("p", {}, "Za ta komad še ni akordov ne besedila."));
+    const pre = el("div", { class: "sheet" });
+    for (const line of text.split("\n")) {
+      if (isSection(line)) pre.append(el("span", { class: "sec" }, line.trim().replace(/^\[|\]$|^\{c:\s*|\}$/g, "")), "\n");
+      else if (isChordLine(line)) { if (view !== "lyrics") pre.append(el("span", { class: "ch" }, line), "\n"); }
+      else if (view !== "chords" || !line.trim()) pre.append(line + "\n");
+    }
+    return pre;
+  }
+
+  // ---------- Metronome + tap tempo ----------
+  let metro = null;
+  function stopMetro() { if (metro) { clearInterval(metro.timer); metro.ctx.close().catch(() => {}); metro = null; } }
+  function metroButton(bpm) {
+    const b = el("button", { type: "button", "aria-pressed": metro ? "true" : "false" }, metro ? "■ Ustavi metronom" : "▶ Metronom " + bpm);
+    b.addEventListener("click", () => {
+      if (metro) { stopMetro(); renderPane(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      const ctx = new AC(); let beat = 0;
+      const tick = () => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = beat % 4 === 0 ? 1500 : 1000; g.gain.setValueAtTime(0.3, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05); o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.06); beat++; };
+      tick(); metro = { ctx, timer: setInterval(tick, 60000 / bpm) }; renderPane();
+    });
+    return b;
+  }
+  function tapButton(input) {
+    let taps = [];
+    return el("button", { type: "button", title: "Tapkaj v ritmu komada", onclick: () => {
+      const now = performance.now(); if (taps.length && now - taps[taps.length - 1] > 2000) taps = [];
+      taps.push(now); if (taps.length > 8) taps.shift();
+      if (taps.length >= 3) { const avg = (taps[taps.length - 1] - taps[0]) / (taps.length - 1); input.value = Math.round(60000 / avg); }
+    } }, "Tapkaj");
+  }
+
+  function setSize(n) { size = Math.max(11, Math.min(26, n)); store.set("pes.size", size); document.documentElement.style.setProperty("--sheet-size", size + "px"); renderPane(); }
+
+  async function saveTransposed(s) {
+    try {
+      await db.doc("songs/" + s.id).update({ sheet: transposeSheet(s.sheet || "", steps, s.key), key: transposeKey(s.key, steps) || "", updatedAt: Date.now() });
+      steps = 0; flash("Shranjeno v novi tonaliteti.", "ok");
+    } catch (e) { flash(dbErr(e)); }
+  }
+
+  // ---------- Editor (new + edit) ----------
+  function editor(s) {
+    const isNew = !s; const v = s || {};
+    const f = (id, label, val, type = "text", extra = {}) => el("label", { for: id }, label, el("input", { id, type, value: val ?? "", ...extra }));
+    const linkInput = el("input", { id: "f-link", type: "url", placeholder: "https://tabs.ultimate-guitar.com/tab/…", value: (v.links && v.links[0] && v.links[0].url) || "" });
+    const openLink = el("a", { class: "btn", target: "_blank", rel: "noopener", hidden: true }, "Odpri stran ↗");
+    const paste = el("textarea", { id: "f-paste", rows: "6", placeholder: "Sem prilepi vsebino strani z akordi" });
+    const importMsg = el("span", { class: "msg" });
+    const importBtn = el("button", { class: "primary", type: "button" }, "Uredi s Claude");
+    const sheet = el("textarea", { id: "f-sheet", spellcheck: "false", placeholder: "[Kitica]\nAm        F        C\nBesedilo pod akordi …" });
+    sheet.value = v.sheet || "";
+    const syncLink = () => {
+      const url = linkInput.value.trim(); const ok = /^https?:\/\//i.test(url);
+      openLink.hidden = !ok; if (ok) openLink.href = url;
+      if (ok && isNew) { const g = guessFromUrl(url); if (g) { if (!$("#f-title").value && g.title) $("#f-title").value = g.title; if (!$("#f-artist").value && g.artist) $("#f-artist").value = g.artist; } }
+    };
+    linkInput.addEventListener("input", syncLink);
+
+    let ctl = null;
+    importBtn.addEventListener("click", async () => {
+      const text = paste.value.trim();
+      if (!text) { importMsg.className = "msg err"; importMsg.textContent = "Najprej prilepi vsebino strani v polje zgoraj."; return; }
+      if (!sample) { importMsg.className = "msg err"; importMsg.textContent = "Claude na tej strani ni na voljo. Prilepi akorde in besedilo neposredno v spodnje polje."; return; }
+      ctl = new AbortController(); importBtn.disabled = true; importMsg.className = "msg"; importMsg.textContent = "Claude ureja vsebino…";
+      const prompt = `A band is building its private songbook. The user opened a chords web page and copied its whole text. Extract the one song on it.
+
+Reply with only one JSON object:
+{"title": string, "artist": string, "key": string, "capo": number|null, "bpm": number|null, "sheet": string, "error": string|null}
+
+Rules for "sheet":
+- Copy the chords and lyrics exactly as they appear in the text. Do not invent, complete or correct anything.
+- Put each chord line on its own line directly above its lyric line, keeping the spaces so chords stay above the right syllable.
+- Put each section label on its own line in square brackets, translated to Slovenian: [Uvod], [Kitica], [Kitica 2], [Predrefren], [Refren], [Most], [Solo], [Zaključek], [Inštrumental].
+- Remove everything that is not the song: site menus, ads, ratings, comments, "views", tuning widgets, strumming diagrams, chord diagrams, buttons.
+- Keep repeat marks like (2x).
+"key": the key if the page states it, otherwise the first chord's root and quality (e.g. "Am"). "capo": the capo fret if stated, else null.
+If the text holds no song, set "error" to a short Slovenian sentence and leave the other fields empty.
+
+Page URL: ${linkInput.value.trim() || "(none)"}
+
+Copied page text:
+"""
+${text.slice(0, 60000)}
+"""`;
+      try {
+        const r = await sample.json(prompt, { modelTier: "quick", signal: ctl.signal });
+        if (!r || typeof r !== "object") throw { code: "invalid_json" };
+        if (r.error) { importMsg.className = "msg err"; importMsg.textContent = r.error; return; }
+        if (r.title) $("#f-title").value = r.title;
+        if (r.artist) $("#f-artist").value = r.artist;
+        if (r.key) $("#f-key").value = r.key;
+        if (r.capo != null && r.capo !== "") $("#f-capo").value = r.capo;
+        if (r.bpm != null && r.bpm !== "") $("#f-bpm").value = r.bpm;
+        if (r.sheet) sheet.value = String(r.sheet);
+        importMsg.className = "msg ok"; importMsg.textContent = "Urejeno. Preglej spodaj in shrani.";
+      } catch (e) {
+        importMsg.className = "msg err";
+        importMsg.textContent = ({ not_granted: "Dovoljenje za Claude je bilo zavrnjeno. Akorde lahko prilepiš neposredno spodaj.", rate_limited: "Preveč zahtev naenkrat. Poskusi čez minuto.", cancelled: "Prekinjeno.", invalid_json: "Claude ni vrnil uporabnega zapisa. Poskusi znova ali prilepi manj besedila.", prompt_too_large: "Besedila je preveč. Kopiraj samo del z akordi." })[e && e.code] || "Uvoz ni uspel. Poskusi znova.";
+      } finally { importBtn.disabled = false; }
+    });
+
+    const saveMsg = el("span", { class: "msg" });
+    const saveBtn = el("button", { class: "primary", type: "button" }, isNew ? "Shrani na seznam" : "Shrani spremembe");
+    saveBtn.addEventListener("click", async () => {
+      const title = $("#f-title").value.trim();
+      if (!title) { saveMsg.className = "msg err"; saveMsg.textContent = "Vpiši naslov komada."; $("#f-title").focus(); return; }
+      if (!db) { saveMsg.className = "msg err"; saveMsg.textContent = "Pesmarica ni povezana, shranjevanje ni mogoče."; return; }
+      const url = linkInput.value.trim();
+      const links = (v.links || []).slice();
+      if (url && /^https?:\/\//i.test(url) && !links.some(l => l.url === url)) links.unshift({ url, label: (guessFromUrl(url) || {}).label || hostLabel(url) });
+      const num = id => { const n = parseInt($(id).value, 10); return Number.isFinite(n) ? n : null; };
+      const data = { title, artist: $("#f-artist").value.trim(), key: $("#f-key").value.trim(), bpm: num("#f-bpm"), capo: num("#f-capo"),
+        notes: $("#f-notes").value.trim(), sheet: sheet.value.replace(/\s+$/, ""), links, updatedAt: Date.now() };
+      saveBtn.disabled = true; saveMsg.className = "msg"; saveMsg.textContent = "Shranjujem…";
+      try {
+        if (isNew) { const ref = await db.collection("songs").add({ ...data, createdAt: Date.now() }); currentId = ref.id; }
+        else await db.doc("songs/" + s.id).update(data);
+        mode = "view"; steps = 0; store.set("pes.current", currentId); render();
+      } catch (e) { saveMsg.className = "msg err"; saveMsg.textContent = dbErr(e); saveBtn.disabled = false; }
+    });
+
+    const cancel = el("button", { type: "button", onclick: () => { ctl?.abort(); mode = "view"; if (isNew) document.body.classList.remove("reading"); render(); } }, "Prekliči");
+    const form = el("div", { class: "form" },
+      el("h2", {}, isNew ? "Nova pesem" : "Uredi pesem"),
+      el("div", { class: "step" },
+        el("h3", {}, "1. Povezava na stran z akordi"),
+        el("p", {}, "Ultimate Guitar, zabrenkaj.si, e-chords, pesmarica.rs ali katerakoli druga. Naslov in izvajalca preberem iz povezave."),
+        el("div", { class: "actions" }, el("div", { style: "flex:1;min-width:220px" }, linkInput), openLink)),
+      el("div", { class: "step" },
+        el("h3", {}, "2. Prilepi vsebino strani"),
+        el("p", {}, "Na odprti strani označi vse (Ctrl+A ali ⌘A), kopiraj in prilepi sem. Claude izlušči akorde in besedilo, ostalo zavrže."),
+        paste, el("div", { class: "actions" }, importBtn, importMsg)),
+      el("div", { class: "row" }, f("f-title", "Naslov", v.title), f("f-artist", "Izvajalec", v.artist)),
+      el("div", { class: "row" }, f("f-key", "Tonaliteta", v.key, "text", { placeholder: "npr. Am" }), el("label", { for: "f-bpm" }, "Tempo (BPM)", (() => { const i = el("input", { id: "f-bpm", type: "number", min: "30", max: "300", value: v.bpm ?? "" }); return el("div", { class: "actions", style: "flex-wrap:nowrap" }, i, tapButton(i)); })()), f("f-capo", "Kapodaster", v.capo, "number", { min: "0", max: "12" })),
+      el("label", { for: "f-sheet" }, "Akordi in besedilo", sheet),
+      el("label", { for: "f-notes" }, "Opombe", el("textarea", { id: "f-notes", rows: "2" }, v.notes || "")),
+      el("div", { class: "actions" }, saveBtn, cancel, saveMsg));
+    queueMicrotask(syncLink);
+    return form;
+  }
+
+  function dbErr(e) {
+    return ({ not_granted: "Nimaš pravice urejati pesmarice. Lastnik te mora dodati kot urednika.", unavailable: "Povezava s pesmarico je prekinjena. Poskusi znova.", quota_exceeded: "Pesmarica je polna.", invalid_argument: "Zapis je prevelik ali neveljaven." })[e && e.code] || "Shranjevanje ni uspelo. Poskusi znova.";
+  }
+  function flash(text, kind = "err") { const b = $("#banner"); b.textContent = text; b.style.borderColor = kind === "ok" ? "var(--ok)" : ""; b.style.color = kind === "ok" ? "var(--ok)" : ""; b.hidden = false; setTimeout(() => { b.hidden = true; }, 4000); }
+
+  $("#q").addEventListener("input", renderList);
+  $("#tab-active").addEventListener("click", () => { showArchive = false; renderList(); });
+  $("#tab-archive").addEventListener("click", () => { showArchive = true; renderList(); });
+  
+
+  render();
+
+  songs = sortSongs(EMBED); ready = true; render();
+})();
+</script>
+
+</body>
+</html>
